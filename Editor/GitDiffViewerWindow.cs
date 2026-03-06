@@ -1,0 +1,183 @@
+using UnityEditor;
+using UnityEngine;
+
+namespace GitIntegration
+{
+    /// <summary>
+    /// Dedicated diff viewer window with syntax-colored output.
+    /// Can show a diff for a specific commit or for the working copy.
+    /// </summary>
+    public class GitDiffViewerWindow : EditorWindow
+    {
+        private string _diffText = "";
+        private string _title = "";
+        private string _commitHash = "";
+        private string _filePath = "";
+        private Vector2 _scroll;
+        private bool _wordWrap;
+        private string _searchTerm = "";
+        private float _fontSize = 11f;
+
+        // ───── Public entry points ──────────────────────────────
+
+        /// <summary>Show diff of a file at a specific commit vs its parent.</summary>
+        public static void ShowDiff(string commitHash, string filePath, string shortHash)
+        {
+            var win = GetWindow<GitDiffViewerWindow>(true, "Diff Viewer");
+            win.minSize = new Vector2(600, 400);
+            win._commitHash = commitHash;
+            win._filePath = filePath;
+            win._title = $"{shortHash} — {filePath}";
+            win._diffText = GitOperations.GetDiff(commitHash, filePath);
+            win._scroll = Vector2.zero;
+            win.Show();
+        }
+
+        /// <summary>Show diff of a working-copy file vs HEAD.</summary>
+        public static void ShowWorkingDiff(string filePath)
+        {
+            var win = GetWindow<GitDiffViewerWindow>(true, "Diff Viewer");
+            win.minSize = new Vector2(600, 400);
+            win._commitHash = "";
+            win._filePath = filePath;
+            win._title = $"Working changes — {filePath}";
+            win._diffText = GitOperations.GetDiffForWorkingCopy(filePath);
+            win._scroll = Vector2.zero;
+            win.Show();
+        }
+
+        // ───── GUI ──────────────────────────────────────────────
+
+        private void OnGUI()
+        {
+            DrawToolbar();
+            GitUIStyles.DrawSeparator(1, 0, 2);
+
+            if (string.IsNullOrEmpty(_diffText))
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("No diff available (file may be binary or identical).", GitUIStyles.CenteredGreyMini);
+                GUILayout.FlexibleSpace();
+                return;
+            }
+
+            DrawStats();
+            DrawDiffContent();
+        }
+
+        // ───── Toolbar ──────────────────────────────────────────
+
+        private void DrawToolbar()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+            GUILayout.Label(_title, EditorStyles.boldLabel, GUILayout.MaxWidth(position.width * 0.6f));
+            GUILayout.FlexibleSpace();
+
+            // Search
+            GUILayout.Label("🔍", GUILayout.Width(18));
+            _searchTerm = EditorGUILayout.TextField(_searchTerm, EditorStyles.toolbarSearchField, GUILayout.Width(140));
+
+            // Word wrap toggle
+            _wordWrap = GUILayout.Toggle(_wordWrap, "Wrap", EditorStyles.toolbarButton, GUILayout.Width(42));
+
+            // Font size
+            if (GUILayout.Button("A-", EditorStyles.toolbarButton, GUILayout.Width(24)))
+                _fontSize = Mathf.Max(8, _fontSize - 1);
+            if (GUILayout.Button("A+", EditorStyles.toolbarButton, GUILayout.Width(24)))
+                _fontSize = Mathf.Min(20, _fontSize + 1);
+
+            // Copy
+            if (GUILayout.Button("Copy", EditorStyles.toolbarButton, GUILayout.Width(42)))
+                EditorGUIUtility.systemCopyBuffer = _diffText;
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        // ───── Stats bar ────────────────────────────────────────
+
+        private void DrawStats()
+        {
+            int adds = 0, removes = 0;
+            foreach (var line in _diffText.Split('\n'))
+            {
+                if (line.StartsWith("+") && !line.StartsWith("+++")) adds++;
+                else if (line.StartsWith("-") && !line.StartsWith("---")) removes++;
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(8);
+
+            var prevColor = GUI.color;
+            GUI.color = GitUIStyles.AccentGreen;
+            GUILayout.Label($"+{adds}", EditorStyles.boldLabel, GUILayout.Width(60));
+            GUI.color = GitUIStyles.AccentRed;
+            GUILayout.Label($"-{removes}", EditorStyles.boldLabel, GUILayout.Width(60));
+            GUI.color = prevColor;
+
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+            GitUIStyles.DrawSeparator(1, 2, 2);
+        }
+
+        // ───── Diff content ─────────────────────────────────────
+
+        private void DrawDiffContent()
+        {
+            // Build a dynamic mono style each frame to respect font size
+            var monoStyle = new GUIStyle(GitUIStyles.MonoLabel)
+            {
+                fontSize = (int)_fontSize,
+                wordWrap = _wordWrap,
+            };
+
+            _scroll = EditorGUILayout.BeginScrollView(_scroll);
+
+            string searchLower = string.IsNullOrEmpty(_searchTerm) ? null : _searchTerm.ToLowerInvariant();
+            int lineNum = 0;
+
+            foreach (var rawLine in _diffText.Split('\n'))
+            {
+                lineNum++;
+                string line = rawLine;
+
+                // Search filter highlight
+                bool matchesSearch = searchLower != null && line.ToLowerInvariant().Contains(searchLower);
+
+                // Determine background colour
+                Color bg = Color.clear;
+                if (line.StartsWith("@@"))
+                    bg = GitUIStyles.DiffHunkBg;
+                else if (line.StartsWith("+") && !line.StartsWith("+++"))
+                    bg = GitUIStyles.DiffAddBg;
+                else if (line.StartsWith("-") && !line.StartsWith("---"))
+                    bg = GitUIStyles.DiffRemoveBg;
+
+                // Draw line
+                var content = new GUIContent(line);
+                float height = monoStyle.CalcHeight(content, position.width - 60);
+                var rect = GUILayoutUtility.GetRect(position.width - 40, Mathf.Max(height, 18));
+
+                if (bg != Color.clear)
+                    EditorGUI.DrawRect(rect, bg);
+
+                if (matchesSearch)
+                {
+                    var highlight = new Color(1f, 1f, 0f, 0.18f);
+                    EditorGUI.DrawRect(rect, highlight);
+                }
+
+                // Line number gutter
+                var gutterRect = new Rect(rect.x, rect.y, 40, rect.height);
+                var gutterStyle = new GUIStyle(GitUIStyles.MutedLabel) { alignment = TextAnchor.MiddleRight, fontSize = (int)_fontSize - 1 };
+                GUI.Label(gutterRect, lineNum.ToString(), gutterStyle);
+
+                // Content
+                var contentRect = new Rect(rect.x + 44, rect.y, rect.width - 48, rect.height);
+                GUI.Label(contentRect, line, monoStyle);
+            }
+
+            EditorGUILayout.EndScrollView();
+        }
+    }
+}
