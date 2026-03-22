@@ -3,18 +3,14 @@ using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>
-    /// Centralized style definitions for the Git Integration tool.
-    /// Provides a polished, consistent look across all windows.
-    /// </summary>
+    /// <summary>Centralized style definitions for the Git Integration tool.</summary>
     public static class GitUIStyles
     {
-        // ───── Package asset paths ───────────────────────────────
+        // Package asset paths
         private const string PackagePath  = "Packages/com.mhze.unity-git-integration";
         private const string IconsPath    = PackagePath + "/ToolAssets/Icons/AssetChangesIcon/";
 
-        // ───── Colours ──────────────────────────────────────────
-        // Adapt to Pro / Personal skin
+        // Colours
 
         public static readonly Color AccentBlue     = EditorGUIUtility.isProSkin ? new Color(0.35f, 0.60f, 1.0f) : new Color(0.15f, 0.40f, 0.85f);
         public static readonly Color AccentGreen    = EditorGUIUtility.isProSkin ? new Color(0.35f, 0.85f, 0.45f) : new Color(0.15f, 0.65f, 0.25f);
@@ -31,7 +27,7 @@ namespace GitIntegration
         public static readonly Color HoverRowBg     = EditorGUIUtility.isProSkin ? new Color(0.26f, 0.26f, 0.28f) : new Color(0.84f, 0.84f, 0.88f);
         public static readonly Color SubtleBorder   = EditorGUIUtility.isProSkin ? new Color(0.20f, 0.20f, 0.20f) : new Color(0.72f, 0.72f, 0.72f);
 
-        // ───── Cached GUIStyles ─────────────────────────────────
+        // Cached GUIStyles
 
         private static GUIStyle _header;
         public static GUIStyle Header
@@ -216,7 +212,7 @@ namespace GitIntegration
             }
         }
 
-        // ───── Drawing helpers ──────────────────────────────────
+        // Drawing helpers
 
         public static void DrawSeparator(float thickness = 1f, float topSpacing = 4f, float bottomSpacing = 4f)
         {
@@ -246,7 +242,6 @@ namespace GitIntegration
             GUI.backgroundColor = prevColor;
         }
 
-        /// <summary>Draws a responsive card header with an icon, title, and optional subtitle.</summary>
         public static void DrawCardHeader(string icon, string title, string subtitle = null)
         {
             EditorGUILayout.BeginHorizontal();
@@ -259,7 +254,6 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        /// <summary>Begins a padded vertical group styled as a card.</summary>
         public static void BeginCard()
         {
             EditorGUILayout.BeginVertical(Card);
@@ -270,13 +264,12 @@ namespace GitIntegration
             EditorGUILayout.EndVertical();
         }
 
-        // ───── Rounded texture & pill drawing ───────────────────
+        // Rounded texture & pill drawing
 
         private static Texture2D _pillTex;
         private static Texture2D _circleTex;
         private static Texture2D _roundedRectTex;
 
-        /// <summary>Returns a white rounded-rectangle texture for stretching. Designed with solid middle for proper scaling.</summary>
         public static Texture2D RoundedRectTexture
         {
             get
@@ -312,11 +305,7 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>
-        /// Returns a high-quality 64×32 white pill texture with antialiased semicircle caps.
-        /// Used as a 3-slice source: left half = left cap, right half = right cap,
-        /// centre columns = fully opaque for stretching.
-        /// </summary>
+        /// <summary>High-quality 64×32 white pill texture with antialiased semicircle caps (3-slice).</summary>
         public static Texture2D PillTexture
         {
             get
@@ -363,7 +352,6 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>Returns a high-quality white circle texture suitable for tinting with GUI.color.</summary>
         public static Texture2D CircleTexture
         {
             get
@@ -391,12 +379,10 @@ namespace GitIntegration
             }
         }
 
-        // Status icon textures (cached)
         private static Texture2D _addedIcon;
         private static Texture2D _modifyIcon;
         private static Texture2D _removedIcon;
 
-        /// <summary>Gets the appropriate status icon texture for a git status code.</summary>
         private static Texture2D GetStatusIcon(string status)
         {
             switch (status.ToUpper())
@@ -420,14 +406,13 @@ namespace GitIntegration
                     return _removedIcon;
                 
                 default:
-                    // Fallback to added icon for unknown statuses
+                    // Fallback to added icon
                     if (_addedIcon == null)
                         _addedIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(IconsPath + "ChangeIcon_Added.png");
                     return _addedIcon;
             }
         }
 
-        /// <summary>Draws a git status icon using the provided PNG assets.</summary>
         public static void DrawStatusCircle(Rect rect, string status)
         {
             Texture2D icon = GetStatusIcon(status);
@@ -437,7 +422,7 @@ namespace GitIntegration
             }
             else
             {
-                // Fallback: draw a colored circle if icon loading fails
+                // Fallback: colored circle
                 Color bg = GitOperations.StatusToColor(status);
                 var prev = GUI.color;
                 GUI.color = bg;
@@ -446,7 +431,6 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>Draws a rounded badge with tinted background and colored text.</summary>
         public static void DrawRoundedBadge(Rect rect, string label, Color color)
         {
             DrawRoundedRect(rect, new Color(color.r, color.g, color.b, 0.22f), 4f);
@@ -467,7 +451,6 @@ namespace GitIntegration
 
         private static GUIStyle _badgeStyle;
 
-        /// <summary>Draws a coloured rounded ref pill (for branch/tag labels).</summary>
         public static void DrawRefPill(Rect rect, string label, Color color)
         {
             DrawRoundedRect(rect, new Color(color.r, color.g, color.b, 0.20f), 4f);
@@ -488,16 +471,10 @@ namespace GitIntegration
 
         private static GUIStyle _pillStyle;
 
-        /// <summary>
-        /// Draws a proper rounded rectangle via 3-slice rendering.
-        /// The pill texture is 64×32: left cap = UV[0,0.25], middle = UV[0.25,0.75], right cap = UV[0.75,1].
-        /// Caps are drawn at a fixed width equal to half the rect height (= corner radius), middle stretches.
-        /// </summary>
+        /// <summary>Draws a rounded rectangle via 3-slice pill texture rendering.</summary>
         public static void DrawRoundedRect(Rect rect, Color color, float radius = 4f)
         {
             Texture2D tex = PillTexture;
-            // Each cap in the texture occupies exactly the left/right quarter (16px of 64px wide)
-            // so we draw it at rect.height/2 wide to preserve the circular shape
             float capW = Mathf.Min(rect.height * 0.5f, rect.width * 0.5f);
 
             var prev = GUI.color;
@@ -505,20 +482,20 @@ namespace GitIntegration
 
             if (rect.width <= capW * 2f)
             {
-                // Too narrow for a middle section — draw the whole pill scaled
+                // Too narrow for middle section
                 GUI.DrawTexture(rect, tex, ScaleMode.StretchToFill);
             }
             else
             {
-                // Left rounded cap   — UV x: 0.00 → 0.25
+                // Left cap
                 GUI.DrawTextureWithTexCoords(
                     new Rect(rect.x, rect.y, capW, rect.height),
                     tex, new Rect(0f, 0f, 0.25f, 1f));
-                // Stretched solid middle — UV x: 0.25 → 0.75
+                // Middle
                 GUI.DrawTextureWithTexCoords(
                     new Rect(rect.x + capW, rect.y, rect.width - capW * 2f, rect.height),
                     tex, new Rect(0.25f, 0f, 0.5f, 1f));
-                // Right rounded cap  — UV x: 0.75 → 1.00
+                // Right cap
                 GUI.DrawTextureWithTexCoords(
                     new Rect(rect.xMax - capW, rect.y, capW, rect.height),
                     tex, new Rect(0.75f, 0f, 0.25f, 1f));
@@ -527,16 +504,13 @@ namespace GitIntegration
             GUI.color = prev;
         }
 
-        /// <summary>
-        /// Draws an author avatar circle with initial letter — shared between all windows.
-        /// </summary>
         public static void DrawAuthorCircle(Rect rect, string author, string email)
         {
             int hash = (email ?? author ?? "").GetHashCode();
             float hue = (Mathf.Abs(hash) % 360) / 360f;
             Color bg = Color.HSVToRGB(hue, 0.50f, 0.60f);
 
-            // Draw a true circle using the SDF circle texture
+
             var prev = GUI.color;
             GUI.color = bg;
             GUI.DrawTexture(rect, CircleTexture, ScaleMode.ScaleToFit);
@@ -558,7 +532,7 @@ namespace GitIntegration
 
         private static GUIStyle _authorInitStyle;
 
-        // ───── Cached column header style ───────────────────────
+        // Column header style
 
         private static GUIStyle _colHeader;
         public static GUIStyle ColumnHeader

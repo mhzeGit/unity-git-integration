@@ -5,9 +5,7 @@ using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>
-    /// Represents a node in the file tree hierarchy.
-    /// </summary>
+    /// <summary>Node in the file tree hierarchy.</summary>
     public class FileTreeNode
     {
         public string Name;
@@ -18,10 +16,7 @@ namespace GitIntegration
         public List<FileTreeNode> Children = new List<FileTreeNode>();
     }
 
-    /// <summary>
-    /// Reusable hierarchical file tree for displaying git changed files.
-    /// Supports folder collapsing, Unity asset icons, click-to-ping, and action buttons.
-    /// </summary>
+    /// <summary>Reusable hierarchical file tree for displaying git changed files.</summary>
     public static class GitFileTreeView
     {
         private const float ROW_H  = 24f;
@@ -30,7 +25,7 @@ namespace GitIntegration
 
         private static readonly HashSet<string> _collapsed = new HashSet<string>();
 
-        // Cached style for folder names (sized to fit ROW_H)
+        // Cached style for folder names
         private static GUIStyle _folderLabel;
         private static GUIStyle FolderLabel
         {
@@ -48,9 +43,7 @@ namespace GitIntegration
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  BUILD TREE
-        // ═══════════════════════════════════════════════════════════
+        // BUILD TREE
 
         public static FileTreeNode Build(List<GitFileChange> files)
         {
@@ -104,7 +97,7 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>Merge single-child folder chains into "folder / subfolder" display names.</summary>
+        /// <summary>Merge single-child folder chains into combined display names.</summary>
         private static void Compact(FileTreeNode node)
         {
             for (int i = 0; i < node.Children.Count; i++)
@@ -134,22 +127,11 @@ namespace GitIntegration
                 if (node.Children[i].IsFolder) Sort(node.Children[i]);
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  DRAW  (layout mode)
-        // ═══════════════════════════════════════════════════════════
+        // DRAW (layout mode)
 
         public delegate void FileAction(string path, string status);
 
-        /// <summary>
-        /// Draw the tree in GUILayout mode. Call inside a scroll view.
-        /// </summary>
-        /// <param name="root">Root node from Build().</param>
-        /// <param name="commitHash">Commit hash (null for working changes).</param>
-        /// <param name="onDiff">Called when Diff button clicked (null = hide button).</param>
-        /// <param name="onSecondary">Called when Restore/Discard button clicked (null to hide).</param>
-        /// <param name="secondaryLabel">Button label for the secondary action.</param>
-        /// <param name="onPing">Called on double-click (or single-click when onRowClick is null).</param>
-        /// <param name="onRowClick">When provided, called on single-click; double-click calls onPing instead.</param>
+        /// <summary>Draw the tree in GUILayout mode inside a scroll view.</summary>
         public static void DrawLayout(
             FileTreeNode root, string commitHash,
             FileAction onDiff, FileAction onSecondary, string secondaryLabel,
@@ -186,14 +168,14 @@ namespace GitIntegration
                 DrawFileNode(node, depth, rowRect, x, commitHash, onDiff, onSecondary, secLabel, onPing, onRowClick);
         }
 
-        // ─── Folder row ─────────────────────────────────────────
+        // Folder row
 
         private static void DrawFolderNode(
             FileTreeNode node, int depth, Rect rowRect, float x,
             string commitHash, FileAction onDiff, FileAction onSecondary,
             string secLabel, FileAction onPing, FileAction onRowClick = null)
         {
-            // Foldout arrow
+            // Foldout
             bool wasExpanded = node.Expanded;
             node.Expanded = EditorGUI.Foldout(new Rect(x, rowRect.y + 3, 14, 18), node.Expanded, GUIContent.none);
             if (node.Expanded != wasExpanded)
@@ -224,19 +206,18 @@ namespace GitIntegration
                 new Color(GitUIStyles.SeparatorColor.r, GitUIStyles.SeparatorColor.g,
                           GitUIStyles.SeparatorColor.b, 0.3f));
 
-            // Children
             if (node.Expanded)
                 for (int i = 0; i < node.Children.Count; i++)
                     DrawNode(node.Children[i], depth + 1, commitHash, onDiff, onSecondary, secLabel, onPing, onRowClick);
         }
 
-        // ─── Double-click tracking ─────────────────────────────
+        // Double-click tracking
 
         private static string _lastClickedPath = null;
         private static double _lastClickTime   = -1.0;
         private const  double DBL_CLICK_SECS   = 0.35;
 
-        // ─── File row ───────────────────────────────────────────
+        // File row
 
         private static void DrawFileNode(
             FileTreeNode node, int depth, Rect rowRect, float x,
@@ -245,7 +226,7 @@ namespace GitIntegration
         {
             x += 16; // align past foldout space
 
-            // Status circle icon (drawn first)
+            // Status circle icon
             if (!string.IsNullOrEmpty(node.Status))
             {
                 float sz = 15f;
@@ -253,13 +234,13 @@ namespace GitIntegration
                 x += sz + 4;
             }
 
-            // Asset icon (drawn second)
+            // Asset icon
             Texture icon = GetAssetIcon(node.FullPath);
             if (icon != null)
                 GUI.DrawTexture(new Rect(x, rowRect.y + 4, ICON_SZ, ICON_SZ), icon, ScaleMode.ScaleToFit);
             x += ICON_SZ + 4;
 
-            // Calculate button area width based on which buttons will actually appear
+            // Calculate button area width
             bool willShowDiff = onDiff != null && !string.IsNullOrEmpty(node.Status) && node.Status != "D";
             bool willShowSec  = onSecondary != null;
             float btnAreaW = (willShowDiff ? 52f : 0f) + (willShowSec ? 66f : 0f);
@@ -268,11 +249,11 @@ namespace GitIntegration
             float nameW = Mathf.Max(rowRect.xMax - x - btnAreaW - 8, 30);
             var nameRect = new Rect(x, rowRect.y + 2, nameW, 20);
 
-            // Clickable area covers the full row minus action buttons
+            // Clickable area
             var clickRect = new Rect(rowRect.x, rowRect.y, rowRect.width - btnAreaW - 4, rowRect.height);
             EditorGUIUtility.AddCursorRect(nameRect, MouseCursor.Link);
 
-            // Detect click using MouseDown so we can distinguish single vs double
+            // Detect click
             if (Event.current.type == EventType.MouseDown
                 && Event.current.button == 0
                 && clickRect.Contains(Event.current.mousePosition))
@@ -283,14 +264,12 @@ namespace GitIntegration
 
                 if (isDouble)
                 {
-                    // Double-click → ping in Project
                     _lastClickedPath = null;
                     _lastClickTime   = -1.0;
                     onPing?.Invoke(node.FullPath, node.Status);
                 }
                 else
                 {
-                    // Single-click → open inline diff (or ping if no row-click handler)
                     _lastClickedPath = node.FullPath;
                     _lastClickTime   = now;
                     if (onRowClick != null)
@@ -301,7 +280,7 @@ namespace GitIntegration
                 Event.current.Use();
             }
 
-            // File name label (not a button — click is handled above)
+            // File name label
             GUI.Label(nameRect, node.Name, EditorStyles.label);
 
             // Action buttons
@@ -326,9 +305,7 @@ namespace GitIntegration
                           GitUIStyles.SeparatorColor.b, 0.18f));
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  ICONS
-        // ═══════════════════════════════════════════════════════════
+        // ICONS
 
         private static Texture _cachedFolderIcon;
         private static Texture CachedFolderIcon
@@ -411,7 +388,7 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>Ping and select an asset in the Unity Project window.</summary>
+        /// <summary>Ping and select an asset in the Project window.</summary>
         public static void PingAsset(string path)
         {
             var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);

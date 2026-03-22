@@ -3,16 +3,13 @@ using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>
-    /// Adds "View Git History" to the Project window right-click context menu.
-    /// Works on any asset file (scripts, materials, prefabs, textures, etc.).
-    /// </summary>
+    /// <summary>Adds Git context menu items to the Project window.</summary>
     public static class GitContextMenu
     {
         private const string MENU_PATH = "Assets/Git/View History %h";
         private const string MENU_DIFF  = "Assets/Git/View Working Diff %d";
 
-        // ───── View History (right-click menu + Ctrl+H) ──
+        // View History
 
         [MenuItem(MENU_PATH, false, 1000)]
         private static void ViewHistory()
@@ -32,7 +29,7 @@ namespace GitIntegration
             return !string.IsNullOrEmpty(GetSelectedAssetPath()) && GitOperations.IsInsideRepo();
         }
 
-        // ───── View Working Diff (right-click menu + Ctrl+D) 
+        // Working Diff
 
         [MenuItem(MENU_DIFF, false, 1001)]
         private static void ViewWorkingDiff()
@@ -52,7 +49,7 @@ namespace GitIntegration
             return !string.IsNullOrEmpty(GetSelectedAssetPath()) && GitOperations.IsInsideRepo();
         }
 
-        // ───── Helper ───────────────────────────────────────────
+        // Helper
 
         private static string GetSelectedAssetPath()
         {

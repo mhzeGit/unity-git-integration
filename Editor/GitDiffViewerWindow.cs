@@ -3,10 +3,7 @@ using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>
-    /// Dedicated diff viewer window with syntax-colored output.
-    /// Can show a diff for a specific commit or for the working copy.
-    /// </summary>
+    /// <summary>Dedicated diff viewer with syntax-colored output.</summary>
     public class GitDiffViewerWindow : EditorWindow
     {
         private string _diffText = "";
@@ -18,9 +15,9 @@ namespace GitIntegration
         private string _searchTerm = "";
         private float _fontSize = 11f;
 
-        // ───── Public entry points ──────────────────────────────
+        // Entry points
 
-        /// <summary>Show diff of a file at a specific commit vs its parent.</summary>
+        /// <summary>Show diff of a file at a specific commit.</summary>
         public static void ShowDiff(string commitHash, string filePath, string shortHash)
         {
             var win = GetWindow<GitDiffViewerWindow>(true, "Diff Viewer");
@@ -33,7 +30,7 @@ namespace GitIntegration
             win.Show();
         }
 
-        /// <summary>Show diff of a working-copy file vs HEAD.</summary>
+        /// <summary>Show diff of working-copy file vs HEAD.</summary>
         public static void ShowWorkingDiff(string filePath)
         {
             var win = GetWindow<GitDiffViewerWindow>(true, "Diff Viewer");
@@ -46,7 +43,7 @@ namespace GitIntegration
             win.Show();
         }
 
-        // ───── GUI ──────────────────────────────────────────────
+        // GUI
 
         private void OnGUI()
         {
@@ -65,7 +62,7 @@ namespace GitIntegration
             DrawDiffContent();
         }
 
-        // ───── Toolbar ──────────────────────────────────────────
+        // Toolbar
 
         private void DrawToolbar()
         {
@@ -94,7 +91,7 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        // ───── Stats bar ────────────────────────────────────────
+        // Stats bar
 
         private void DrawStats()
         {
@@ -120,11 +117,11 @@ namespace GitIntegration
             GitUIStyles.DrawSeparator(1, 2, 2);
         }
 
-        // ───── Diff content ─────────────────────────────────────
+        // Diff content
 
         private void DrawDiffContent()
         {
-            // Build a dynamic mono style each frame to respect font size
+
             var monoStyle = new GUIStyle(GitUIStyles.MonoLabel)
             {
                 fontSize = (int)_fontSize,
@@ -141,10 +138,9 @@ namespace GitIntegration
                 lineNum++;
                 string line = rawLine;
 
-                // Search filter highlight
+                // Search highlight
                 bool matchesSearch = searchLower != null && line.ToLowerInvariant().Contains(searchLower);
 
-                // Determine background colour
                 Color bg = Color.clear;
                 if (line.StartsWith("@@"))
                     bg = GitUIStyles.DiffHunkBg;
@@ -172,7 +168,6 @@ namespace GitIntegration
                 var gutterStyle = new GUIStyle(GitUIStyles.MutedLabel) { alignment = TextAnchor.MiddleRight, fontSize = (int)_fontSize - 1 };
                 GUI.Label(gutterRect, lineNum.ToString(), gutterStyle);
 
-                // Content
                 var contentRect = new Rect(rect.x + 44, rect.y, rect.width - 48, rect.height);
                 GUI.Label(contentRect, line, monoStyle);
             }

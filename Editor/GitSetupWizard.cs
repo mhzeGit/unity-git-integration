@@ -4,11 +4,7 @@ using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>
-    /// Git Configuration viewer / editor.
-    /// Auto-detects existing Git setup from the project directory.
-    /// Only shows what's missing — if everything is configured, it says so.
-    /// </summary>
+    /// <summary>Git Configuration viewer / editor window.</summary>
     public class GitSetupWizard : EditorWindow
     {
         private GitUserConfig _userConfig;
@@ -59,7 +55,7 @@ namespace GitIntegration
             _editMode = false;
         }
 
-        // ───── GUI ──────────────────────────────────────────────
+        // GUI
 
         private void OnGUI()
         {
@@ -85,7 +81,7 @@ namespace GitIntegration
             EditorGUILayout.EndScrollView();
         }
 
-        // ───── Git not installed ────────────────────────────────
+        // Git not installed
 
         private void DrawNotInstalled()
         {
@@ -95,7 +91,7 @@ namespace GitIntegration
                 DetectConfig();
         }
 
-        // ───── Not a repo ───────────────────────────────────────
+        // Not a repo
 
         private void DrawNotARepo()
         {
@@ -122,12 +118,12 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        // ───── Main config view (existing repo) ────────────────
+        // Main config view
 
         private void DrawDetectedConfig()
         {
             // Status header
-            EditorGUILayout.HelpBox("Git repository detected. Configuration loaded from your project.", MessageType.Info);
+            EditorGUILayout.HelpBox("Git repository detected.", MessageType.Info);
             GUILayout.Space(8);
 
             // Repository
@@ -252,7 +248,7 @@ namespace GitIntegration
             GUILayout.Space(8);
         }
 
-        // ───── Apply edits ──────────────────────────────────────
+        // Apply edits
 
         private void ApplyEdits()
         {
@@ -270,7 +266,7 @@ namespace GitIntegration
             DetectConfig();
         }
 
-        // ───── Drawing helpers ──────────────────────────────────
+        // Drawing helpers
 
         private void DrawReadOnlyField(string label, string value)
         {

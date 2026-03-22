@@ -6,16 +6,10 @@ using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>
-    /// Main Git Integration window – Fork-style layout.
-    /// Left sidebar: workspace / local branches / remote branches.
-    /// Right: branch graph with coloured lane lines and commit detail panel.
-    /// </summary>
+    /// <summary>Main Git Integration window with graph, sidebar, and detail panels.</summary>
     public class GitIntegrationWindow : EditorWindow
     {
-        // ─────────────────────────────────────────────────────────
-        //  Layout constants
-        // ─────────────────────────────────────────────────────────
+        // Layout constants
         const float TOOLBAR_H  = 22f;
         const float SEARCH_H   = 24f;
         const float COL_HDR_H  = 22f;
@@ -24,7 +18,7 @@ namespace GitIntegration
         const float DOT_R      = 4.5f;
         const float LINE_W     = 2.0f;
 
-        // ── Resizable splitter state ──────────────────────────
+        // Resizable splitter state
         private float _sidebarW      = 180f;
         private float _detailH       = 250f;
         private float _detailTreeW   = 240f;
@@ -35,9 +29,7 @@ namespace GitIntegration
         private bool  _draggingDetailTree  = false;
         private bool  _draggingChangesTree = false;
 
-        // ─────────────────────────────────────────────────────────
-        //  State
-        // ─────────────────────────────────────────────────────────
+        // State
         private List<GraphRow>        _graphRows     = new List<GraphRow>();
         private List<GitBranchInfo>   _branches      = new List<GitBranchInfo>();
         private List<GitStatusEntry>  _statusEntries = new List<GitStatusEntry>();
@@ -92,9 +84,8 @@ namespace GitIntegration
         private string _configEditRemoteUrl = "";
         private bool _configEditMode;
 
-        // ─────────────────────────────────────────────────────────
-        //  Open
-        // ─────────────────────────────────────────────────────────
+        // Open
+
         [MenuItem("Tools/Git Integration %&g", false, 200)]
         public static void ShowWindow()
         {
@@ -111,12 +102,10 @@ namespace GitIntegration
             if (_gitAvailable && _isRepo) RefreshAll();
         }
 
-        // ─────────────────────────────────────────────────────────
-        //  Top-level OnGUI
-        // ─────────────────────────────────────────────────────────
+        // OnGUI
+
         private void OnGUI()
         {
-            // Drive hover repaint
             if (Event.current.type == EventType.MouseMove)
                 Repaint();
 
@@ -132,7 +121,7 @@ namespace GitIntegration
             DrawSidebar();
             EditorGUILayout.EndVertical();
 
-            // Sidebar splitter (draggable)
+            // Sidebar splitter
             var vSep = GUILayoutUtility.GetRect(5, 5, GUILayout.Width(5), GUILayout.ExpandHeight(true));
             DrawVerticalSplitter(vSep, ref _draggingSidebar, ref _sidebarW, 120f, 320f);
 
@@ -146,9 +135,8 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  TOOLBAR
-        // ═════════════════════════════════════════════════════════
+        // TOOLBAR
+
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -184,9 +172,8 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  SIDEBAR
-        // ═════════════════════════════════════════════════════════
+        // SIDEBAR
+
         private void DrawSidebar()
         {
             _sidebarScroll = EditorGUILayout.BeginScrollView(_sidebarScroll, GUILayout.ExpandHeight(true));
@@ -194,17 +181,17 @@ namespace GitIntegration
             GUILayout.Space(4);
             GUILayout.Label("VIEWS", GitUIStyles.SectionLabel);
 
-            // ── History row ──
+            // History row
             DrawSidebarRow("History", "UnityEditor.SceneHierarchyWindow", !_showChanges && !_showConfiguration, 
                 () => { _showChanges = false; _showConfiguration = false; });
 
-            // ── Working Tree row ──
+            // Working Tree row
             bool hasChanges = _statusEntries.Count > 0;
             DrawSidebarRow("Working Tree", "UnityEditor.ProjectBrowser", _showChanges && !_showConfiguration, 
                 () => { _showChanges = true; _showConfiguration = false; },
                 hasChanges ? _statusEntries.Count.ToString() : null);
 
-            // ── Configuration row ──
+            // Configuration row
             DrawSidebarRow("Configuration", "UnityEditor.SettingsWindow", _showConfiguration,
                 () => { _showConfiguration = true; _showChanges = false; RefreshConfigState(); });
 
@@ -241,9 +228,8 @@ namespace GitIntegration
             }
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  GRAPH PANEL  (right side when showing commits)
-        // ═════════════════════════════════════════════════════════
+        // GRAPH PANEL
+
         private void DrawGraphPanel()
         {
             // Search bar
@@ -261,13 +247,12 @@ namespace GitIntegration
 
             bool hasDetail = _selectedRowIdx >= 0 && _graphRows.Count > 0;
 
-            // Graph area — uses ExpandHeight so the layout system gives it all
-            // remaining space after the fixed-height detail panel (if shown).
+            // Graph area
             Rect graphRect = GUILayoutUtility.GetRect(10, 60,
                 GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             DrawGraphArea(graphRect, graphRect.width);
 
-            // Detail panel (pure layout mode, fixed height)
+            // Detail panel
             if (hasDetail)
             {
                 var sepR = GUILayoutUtility.GetRect(0, 5, GUILayout.ExpandWidth(true), GUILayout.Height(5));
@@ -276,7 +261,7 @@ namespace GitIntegration
             }
         }
 
-        // ─── Column headers ─────────────────────────────────────
+        // Column headers
 
         private void DrawColumnHeaders()
         {
@@ -293,7 +278,7 @@ namespace GitIntegration
             EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - 1, rect.width, 1), GitUIStyles.SeparatorColor);
         }
 
-        // ─── Graph scroll area ──────────────────────────────────
+        // Graph scroll area
 
         private void DrawGraphArea(Rect area, float rightW)
         {
@@ -319,7 +304,7 @@ namespace GitIntegration
             GUI.EndScrollView();
         }
 
-        // ─── Single commit row ──────────────────────────────────
+        // Single commit row
 
         private void DrawRow(List<GraphRow> rows, int idx, float contentW, float graphColW)
         {
@@ -340,14 +325,14 @@ namespace GitIntegration
             if (selected)
                 EditorGUI.DrawRect(new Rect(0, y, 2, ROW_H), GitUIStyles.AccentBlue);
 
-            // ── Graph area ──
+            // Graph area
             DrawGraphForRow(row, new Rect(0, y, graphColW, ROW_H));
 
-            // ── Ref labels ──
+            // Ref labels
             float refX    = graphColW + 2;
             float refUsed = DrawRefLabels(row.Commit, refX, y);
 
-            // ── Commit text ──
+            // Commit text
             float infoX   = refX + refUsed;
             float dateW   = 80f;
             float authW   = 100f;
@@ -392,7 +377,7 @@ namespace GitIntegration
             }
         }
 
-        // ─── Graph rendering per row ────────────────────────────
+        // Graph rendering per row
 
         private void DrawGraphForRow(GraphRow row, Rect r)
         {
@@ -441,13 +426,13 @@ namespace GitIntegration
             }
         }
 
-        // ─── Ref label pills ────────────────────────────────────
+        // Ref label pills
 
         private float DrawRefLabels(GitCommitInfo commit, float startX, float y)
         {
             if (commit.Refs == null || commit.Refs.Count == 0) return 0f;
 
-            // ── Build a clean, deduplicated ref list ──────────────
+            // Build deduplicated ref list
             var pills = new System.Collections.Generic.List<(string label, Color color)>();
             var localNames = new System.Collections.Generic.HashSet<string>();
 
@@ -506,20 +491,19 @@ namespace GitIntegration
             return x - startX + 2;
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  DETAIL PANEL  (bottom, pure layout mode)
-        // ═════════════════════════════════════════════════════════
+        // DETAIL PANEL
+
         private void DrawDetailPanel()
         {
             var filtered = GetFilteredRows();
             if (_selectedRowIdx < 0 || _selectedRowIdx >= filtered.Count) return;
             var commit = filtered[_selectedRowIdx].Commit;
 
-            // Fixed-height vertical group — the layout system reserves exactly DETAIL_H
+            // Fixed-height vertical group
             var groupRect = EditorGUILayout.BeginVertical(GUILayout.Height(_detailH));
             EditorGUI.DrawRect(groupRect, GitUIStyles.CardBg);
 
-            // ── Header bar (40 px) ──
+            // Header bar
             var headerRect = GUILayoutUtility.GetRect(0, 40, GUILayout.ExpandWidth(true));
             EditorGUI.DrawRect(headerRect, GitUIStyles.HeaderBg);
 
@@ -547,7 +531,7 @@ namespace GitIntegration
                 new Rect(headerRect.xMax - 90, headerRect.y + 11, 58, 18),
                 $"{fileCount} files", GitUIStyles.AccentBlue);
 
-            // ── Horizontal split: file tree (left) + inline diff (right) ──
+            // File tree + inline diff split
             EditorGUILayout.BeginHorizontal(GUILayout.ExpandHeight(true));
 
             // Left column – file tree
@@ -606,9 +590,8 @@ namespace GitIntegration
             EditorGUILayout.EndVertical();
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  HISTORY DETAIL INLINE DIFF
-        // ═════════════════════════════════════════════════════════
+        // HISTORY DETAIL INLINE DIFF
+
         private void DrawDetailInlineDiff()
         {
             // Header bar
@@ -676,9 +659,8 @@ namespace GitIntegration
             GUI.EndScrollView();
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  WORKING CHANGES PANEL
-        // ═════════════════════════════════════════════════════════
+        // WORKING CHANGES PANEL
+
         private void DrawChangesPanel()
         {
             // Header toolbar
@@ -707,7 +689,7 @@ namespace GitIntegration
             // Horizontal split: file tree on the left, diff panel on the right
             EditorGUILayout.BeginHorizontal(GUILayout.ExpandHeight(true));
 
-            // ── Left: file tree ──────────────────────────────────
+            // Left: file tree
             EditorGUILayout.BeginVertical(
                 _selectedChangePath != null
                     ? (GUILayoutOption[])new[] { GUILayout.Width(_changesTreeW), GUILayout.ExpandHeight(true) }
@@ -759,7 +741,7 @@ namespace GitIntegration
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
 
-            // ── Right: inline diff panel ─────────────────────────
+            // Right: inline diff
             if (_selectedChangePath != null)
             {
                 // Draggable vertical splitter
@@ -774,22 +756,17 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  INLINE DIFF PANEL
-        // ═════════════════════════════════════════════════════════
+        // INLINE DIFF PANEL
 
         private void DrawInlineDiffPanel()
         {
-            // Header bar
             var headerRect = GUILayoutUtility.GetRect(0, 28, GUILayout.ExpandWidth(true));
             EditorGUI.DrawRect(headerRect, GitUIStyles.HeaderBg);
-
-            // File name label
             string displayName = System.IO.Path.GetFileName(_selectedChangePath);
             GUI.Label(new Rect(headerRect.x + 8, headerRect.y + 6, headerRect.width - 80, 18),
                       displayName, EditorStyles.boldLabel);
 
-            // "Ping" button – highlight in project
+            // Ping button
             if (GUI.Button(new Rect(headerRect.xMax - 70, headerRect.y + 5, 40, 18),
                            "Ping", EditorStyles.miniButton))
                 GitFileTreeView.PingAsset(_selectedChangePath);
@@ -804,7 +781,7 @@ namespace GitIntegration
                 return;
             }
 
-            // Diff content scroll — fills remaining height of the right panel
+            // Diff content scroll
             var scrollRect = GUILayoutUtility.GetRect(0, 0, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             EditorGUI.DrawRect(scrollRect, GitUIStyles.CardBg);
 
@@ -816,16 +793,16 @@ namespace GitIntegration
                 return;
             }
 
-            // Line rendering inside a scroll view
+            // Line rendering
             var monoStyle = new GUIStyle(GitUIStyles.MonoLabel) { fontSize = 11, wordWrap = false };
             var gutterStyle = new GUIStyle(GitUIStyles.MutedLabel)
                 { alignment = TextAnchor.MiddleRight, fontSize = 10 };
 
-            // Pre-calculate total content height for the scroll view
+            // Pre-calculate content height
             string[] lines = _inlineDiffText.Split('\n');
             float lineH = 16f;
             float contentH = lines.Length * lineH;
-            float contentW = scrollRect.width - 16; // subtract scrollbar width estimate
+            float contentW = scrollRect.width - 16;
 
             _inlineDiffScroll = GUI.BeginScrollView(scrollRect, _inlineDiffScroll,
                 new Rect(0, 0, contentW, contentH));
@@ -840,7 +817,7 @@ namespace GitIntegration
                 string line = lines[i];
                 var lineRect = new Rect(0, i * lineH, contentW, lineH);
 
-                // Background colour by line type
+                // Background by line type
                 Color bg = Color.clear;
                 if (line.StartsWith("@@"))          bg = GitUIStyles.DiffHunkBg;
                 else if (line.StartsWith("+") && !line.StartsWith("+++")) bg = GitUIStyles.DiffAddBg;
@@ -849,19 +826,17 @@ namespace GitIntegration
                 if (bg != Color.clear)
                     EditorGUI.DrawRect(lineRect, bg);
 
-                // Line number gutter (40px)
+                // Line number gutter
                 GUI.Label(new Rect(0, i * lineH, 36, lineH), (i + 1).ToString(), gutterStyle);
 
-                // Line content
                 GUI.Label(new Rect(40, i * lineH, contentW - 44, lineH), line, monoStyle);
             }
 
             GUI.EndScrollView();
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  NO-GIT / NO-REPO screens
-        // ═════════════════════════════════════════════════════════
+        // NO-GIT / NO-REPO screens
+
         private void DrawNoGit()
         {
             GUILayout.FlexibleSpace();
@@ -902,9 +877,8 @@ namespace GitIntegration
             GUILayout.FlexibleSpace();
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  DATA – REFRESH
-        // ═════════════════════════════════════════════════════════
+        // DATA REFRESH
+
         private void CheckGitState()
         {
             _gitAvailable = GitOperations.IsGitInstalled();
@@ -937,7 +911,7 @@ namespace GitIntegration
             Repaint();
         }
 
-        // ─── Search filter (cached) ─────────────────────────────
+        // Search filter (cached)
 
         private List<GraphRow> GetFilteredRows()
         {
@@ -959,11 +933,8 @@ namespace GitIntegration
             return _filteredCache;
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  DRAWING PRIMITIVES  (anti-aliased via Handles)
-        // ═════════════════════════════════════════════════════════
+        // DRAWING PRIMITIVES
 
-        /// <summary>Smooth anti-aliased vertical line using Handles.</summary>
         private static void DrawVLineAA(float x, float y0, float y1, Color color)
         {
             Handles.color = color;
@@ -974,7 +945,7 @@ namespace GitIntegration
 
         /// <summary>
         /// Smooth Bezier curve. Vertical lines use DrawAAPolyLine.
-        /// Diagonals use cubic Bezier with vertical tangents (Fork/GitKraken style S-curve).
+        /// Diagonals use cubic Bezier with vertical tangents.
         /// </summary>
         private static void DrawBezierLine(float x0, float y0, float x1, float y1, Color color)
         {
@@ -984,7 +955,7 @@ namespace GitIntegration
                 return;
             }
             float midY = (y0 + y1) * 0.5f;
-            // Control points keep the same X as their endpoint → vertical-tangent S-curve
+            // Control points keep same X → vertical-tangent S-curve
             Vector3 p0 = new Vector3(x0, y0, 0f);
             Vector3 p1 = new Vector3(x0, midY, 0f);
             Vector3 p2 = new Vector3(x1, midY, 0f);
@@ -998,14 +969,10 @@ namespace GitIntegration
             return s.Length <= max ? s : s.Substring(0, max - 1) + "…";
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  SPLITTER HELPERS
-        // ═════════════════════════════════════════════════════════
+        // SPLITTER HELPERS
 
-        /// <summary>Draws a 5px vertical drag bar that adjusts a horizontal panel width.</summary>
         private void DrawVerticalSplitter(Rect r, ref bool dragging, ref float value, float min, float max)
         {
-            // Background — use a slightly brighter tint on hover/drag
             bool hot = dragging || r.Contains(Event.current.mousePosition);
             EditorGUI.DrawRect(r, hot
                 ? new Color(GitUIStyles.SeparatorColor.r + 0.08f,
@@ -1030,8 +997,6 @@ namespace GitIntegration
 
         /// <summary>
         /// Draws a 5px horizontal drag bar that adjusts a vertical panel height.
-        /// <paramref name="invert"/> = true when the panel being sized is BELOW the splitter
-        /// (dragging up should increase the height).
         /// </summary>
         private void DrawHorizontalSplitter(Rect r, ref bool dragging, ref float value,
                                              float min, float max, bool invert = false)
@@ -1063,9 +1028,7 @@ namespace GitIntegration
             }
         }
 
-        // ═════════════════════════════════════════════════════════
-        //  CONFIGURATION PANEL
-        // ═════════════════════════════════════════════════════════
+        // CONFIGURATION PANEL
 
         private void RefreshConfigState()
         {
@@ -1117,9 +1080,7 @@ namespace GitIntegration
                 return;
             }
 
-            // ─────────────────────────────────────────────────────────
-            // ── Repository Info Card ──────────────────────────────────
-            // ─────────────────────────────────────────────────────────
+            // Repository
             GUILayout.Space(10);
             GitUIStyles.BeginCard();
             GUILayout.Label("Repository", GitUIStyles.SectionLabel);
@@ -1128,9 +1089,7 @@ namespace GitIntegration
             DrawConfigReadOnlyField("Git Version", _configGitVersion);
             GitUIStyles.EndCard();
 
-            GUILayout.Space(10);
-
-            // ── Identity Card ──────────────────────────────────
+            // Identity
             GUILayout.Space(10);
             GitUIStyles.BeginCard();
             GUILayout.Label("Git Identity", GitUIStyles.SectionLabel);
@@ -1153,9 +1112,7 @@ namespace GitIntegration
             }
             GitUIStyles.EndCard();
 
-            GUILayout.Space(10);
-
-            // ── Remotes Card ───────────────────────────────────
+            // Remotes
             GUILayout.Space(10);
             GitUIStyles.BeginCard();
             GUILayout.Label("Remotes", GitUIStyles.SectionLabel);
@@ -1184,9 +1141,7 @@ namespace GitIntegration
             }
             GitUIStyles.EndCard();
 
-            GUILayout.Space(10);
-
-            // ── Project Settings Card ──────────────────────────
+            // Project Settings
             GUILayout.Space(10);
             GitUIStyles.BeginCard();
             GUILayout.Label("Project Settings", GitUIStyles.SectionLabel);
@@ -1216,7 +1171,7 @@ namespace GitIntegration
 
             GUILayout.Space(10);
 
-            // ── Edit / Save buttons ────────────────────────────
+            // Edit / Save buttons
             EditorGUILayout.BeginHorizontal();
 
             if (!_configEditMode)

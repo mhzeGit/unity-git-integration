@@ -10,9 +10,8 @@ using Debug = UnityEngine.Debug;
 
 namespace GitIntegration
 {
-    // ───────────────────────────────────────────────────────────────
-    //  Data models
-    // ───────────────────────────────────────────────────────────────
+    // Data models
+
     [Serializable]
     public class GitCommitInfo
     {
@@ -72,9 +71,8 @@ namespace GitIntegration
         public string PushUrl;
     }
 
-    // ───────────────────────────────────────────────────────────────
-    //  Git operations – thin wrapper around the git CLI
-    // ───────────────────────────────────────────────────────────────
+    // Git CLI wrapper
+
     public static class GitOperations
     {
         // Cached repo root – resolved once
@@ -94,10 +92,7 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>
-        /// Resolves the repo root WITHOUT going through RunGit (which depends on RepoRoot).
-        /// This breaks the circular dependency.
-        /// </summary>
+        /// <summary>Resolves repo root without going through RunGit (avoids circular dependency).</summary>
         private static string ResolveRepoRoot()
         {
             try
@@ -138,7 +133,7 @@ namespace GitIntegration
             _repoRootResolved = false;
         }
 
-        // ─── Low-level ──────────────────────────────────────────
+        // Low-level
 
         public static (string output, string error, int exitCode) RunGit(string arguments, int timeoutMs = 30000)
         {
@@ -188,7 +183,7 @@ namespace GitIntegration
             }
         }
 
-        // ─── Repository detection ───────────────────────────────
+        // Repository detection
 
         public static bool IsGitInstalled()
         {
@@ -208,13 +203,13 @@ namespace GitIntegration
             return code == 0 && output.Trim() == "true";
         }
 
-        // ─── Init / Clone ───────────────────────────────────────
+        // Init / Clone
 
         public static bool InitRepo()
         {
             var (_, error, code) = RunGit("init");
             if (code != 0) Debug.LogError($"[Git] init failed: {error}");
-            InvalidateRepoRoot(); // re-resolve on next access
+            InvalidateRepoRoot();
             return code == 0;
         }
 
@@ -236,7 +231,7 @@ namespace GitIntegration
             return code == 0;
         }
 
-        // ─── User config ────────────────────────────────────────
+        // User config
 
         public static GitUserConfig GetUserConfig()
         {
@@ -254,7 +249,7 @@ namespace GitIntegration
             return c1 == 0 && c2 == 0;
         }
 
-        // ─── Remotes ────────────────────────────────────────────
+        // Remotes
 
         public static List<GitRemoteInfo> GetRemotes()
         {
@@ -290,7 +285,7 @@ namespace GitIntegration
             return list;
         }
 
-        // ─── Fetch (read-only, safe) ────────────────────────────
+        // Fetch
 
         public static bool Fetch()
         {
@@ -299,7 +294,7 @@ namespace GitIntegration
             return code == 0;
         }
 
-        // ─── Branches ───────────────────────────────────────────
+        // Branches
 
         public static string GetCurrentBranch()
         {
@@ -357,7 +352,7 @@ namespace GitIntegration
             return list;
         }
 
-        // ─── Status ─────────────────────────────────────────────
+        // Status
 
         public static List<GitStatusEntry> GetStatus()
         {
@@ -380,7 +375,7 @@ namespace GitIntegration
             return GetStatus().Count;
         }
 
-        // ─── Commit log ─────────────────────────────────────────
+        // Commit log
 
         private const string LOG_FORMAT = "%H|%h|%an|%ae|%ai|%ar|%s";
         private const char LOG_SEPARATOR = '|';
@@ -412,10 +407,7 @@ namespace GitIntegration
             return list;
         }
 
-        /// <summary>
-        /// Returns all commits across ALL branches with parent hashes and ref labels.
-        /// Used by the graph builder.
-        /// </summary>
+        /// <summary>Returns all commits across all branches with parent hashes and ref labels.</summary>
         public static List<GitCommitInfo> GetLogAll(int count = 300)
         {
             // Use unit-separator (\x1F) as field delimiter to avoid conflicts with any content
@@ -481,7 +473,7 @@ namespace GitIntegration
             return list;
         }
 
-        // ─── Diff ────────────────────────────────────────────────
+        // Diff
 
         public static string GetDiff(string commitHash, string filePath = null)
         {
@@ -510,13 +502,9 @@ namespace GitIntegration
             return code == 0 ? output : null;
         }
 
-        // ─── Restore (local only, no push/merge) ────────────────
+        // Restore (local only)
 
-        /// <summary>
-        /// Restores a specific file to the state it was in at a given commit.
-        /// This is a LOCAL operation only – no push, no force, no merge.
-        /// The file will appear as a modified working-tree change.
-        /// </summary>
+        /// <summary>Restores a file to the state at a given commit (local only).</summary>
         public static bool RestoreFileFromCommit(string commitHash, string filePath)
         {
             string relPath = NormalizeToRepoRelative(filePath);
@@ -531,9 +519,7 @@ namespace GitIntegration
             return true;
         }
 
-        /// <summary>
-        /// Discards all local changes for a specific file (reverts to HEAD).
-        /// </summary>
+        /// <summary>Discards local changes for a file (reverts to HEAD).</summary>
         public static bool DiscardLocalChanges(string filePath)
         {
             string relPath = NormalizeToRepoRelative(filePath);
@@ -546,7 +532,7 @@ namespace GitIntegration
             return true;
         }
 
-        // ─── Gitignore helpers ───────────────────────────────────
+        // Gitignore
 
         public static bool HasGitIgnore()
         {
@@ -625,7 +611,7 @@ plastic.selector
             return true;
         }
 
-        // ─── LFS ─────────────────────────────────────────────────
+        // LFS
 
         public static bool IsLfsInstalled()
         {
@@ -640,7 +626,7 @@ plastic.selector
             return code == 0;
         }
 
-        // ─── Helpers ─────────────────────────────────────────────
+        // Helpers
 
         public static string NormalizeToRepoRelative(string fullPath)
         {
