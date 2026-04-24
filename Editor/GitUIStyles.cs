@@ -1,16 +1,13 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>Centralized style definitions for the Git Integration tool.</summary>
     public static class GitUIStyles
     {
-        // Package asset paths
         private const string PackagePath  = "Packages/com.mhze.unity-git-integration";
         private const string IconsPath    = PackagePath + "/ToolAssets/Icons/AssetChangesIcon/";
 
-        // Colours
 
         public static readonly Color AccentBlue     = EditorGUIUtility.isProSkin ? new Color(0.35f, 0.60f, 1.0f) : new Color(0.15f, 0.40f, 0.85f);
         public static readonly Color AccentGreen    = EditorGUIUtility.isProSkin ? new Color(0.35f, 0.85f, 0.45f) : new Color(0.15f, 0.65f, 0.25f);
@@ -27,7 +24,6 @@ namespace GitIntegration
         public static readonly Color HoverRowBg     = EditorGUIUtility.isProSkin ? new Color(0.26f, 0.26f, 0.28f) : new Color(0.84f, 0.84f, 0.88f);
         public static readonly Color SubtleBorder   = EditorGUIUtility.isProSkin ? new Color(0.20f, 0.20f, 0.20f) : new Color(0.72f, 0.72f, 0.72f);
 
-        // Cached GUIStyles
 
         private static GUIStyle _header;
         public static GUIStyle Header
@@ -212,7 +208,6 @@ namespace GitIntegration
             }
         }
 
-        // Drawing helpers
 
         public static void DrawSeparator(float thickness = 1f, float topSpacing = 4f, float bottomSpacing = 4f)
         {
@@ -264,7 +259,6 @@ namespace GitIntegration
             EditorGUILayout.EndVertical();
         }
 
-        // Rounded texture & pill drawing
 
         private static Texture2D _pillTex;
         private static Texture2D _circleTex;
@@ -289,12 +283,10 @@ namespace GitIntegration
                             float px = x + 0.5f;
                             float py = y + 0.5f;
                             
-                            // Distance from nearest corner
                             float dx = Mathf.Max(0, Mathf.Max(r - px, px - (w - r)));
                             float dy = Mathf.Max(0, Mathf.Max(r - py, py - (h - r)));
                             float dist = Mathf.Sqrt(dx * dx + dy * dy);
                             
-                            // Smooth alpha for antialiasing
                             float a = Mathf.Clamp01(r - dist + 0.5f);
                             _roundedRectTex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
                         }
@@ -305,7 +297,6 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>High-quality 64×32 white pill texture with antialiased semicircle caps (3-slice).</summary>
         public static Texture2D PillTexture
         {
             get
@@ -406,7 +397,6 @@ namespace GitIntegration
                     return _removedIcon;
                 
                 default:
-                    // Fallback to added icon
                     if (_addedIcon == null)
                         _addedIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(IconsPath + "ChangeIcon_Added.png");
                     return _addedIcon;
@@ -422,7 +412,6 @@ namespace GitIntegration
             }
             else
             {
-                // Fallback: colored circle
                 Color bg = GitOperations.StatusToColor(status);
                 var prev = GUI.color;
                 GUI.color = bg;
@@ -471,7 +460,6 @@ namespace GitIntegration
 
         private static GUIStyle _pillStyle;
 
-        /// <summary>Draws a rounded rectangle via 3-slice pill texture rendering.</summary>
         public static void DrawRoundedRect(Rect rect, Color color, float radius = 4f)
         {
             Texture2D tex = PillTexture;
@@ -482,20 +470,16 @@ namespace GitIntegration
 
             if (rect.width <= capW * 2f)
             {
-                // Too narrow for middle section
                 GUI.DrawTexture(rect, tex, ScaleMode.StretchToFill);
             }
             else
             {
-                // Left cap
                 GUI.DrawTextureWithTexCoords(
                     new Rect(rect.x, rect.y, capW, rect.height),
                     tex, new Rect(0f, 0f, 0.25f, 1f));
-                // Middle
                 GUI.DrawTextureWithTexCoords(
                     new Rect(rect.x + capW, rect.y, rect.width - capW * 2f, rect.height),
                     tex, new Rect(0.25f, 0f, 0.5f, 1f));
-                // Right cap
                 GUI.DrawTextureWithTexCoords(
                     new Rect(rect.xMax - capW, rect.y, capW, rect.height),
                     tex, new Rect(0.75f, 0f, 0.25f, 1f));
@@ -532,7 +516,6 @@ namespace GitIntegration
 
         private static GUIStyle _authorInitStyle;
 
-        // Column header style
 
         private static GUIStyle _colHeader;
         public static GUIStyle ColumnHeader

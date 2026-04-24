@@ -1,9 +1,8 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>Dedicated diff viewer with syntax-colored output.</summary>
     public class GitDiffViewerWindow : EditorWindow
     {
         private string _diffText = "";
@@ -15,35 +14,31 @@ namespace GitIntegration
         private string _searchTerm = "";
         private float _fontSize = 11f;
 
-        // Entry points
 
-        /// <summary>Show diff of a file at a specific commit.</summary>
         public static void ShowDiff(string commitHash, string filePath, string shortHash)
         {
             var win = GetWindow<GitDiffViewerWindow>(true, "Diff Viewer");
             win.minSize = new Vector2(600, 400);
             win._commitHash = commitHash;
             win._filePath = filePath;
-            win._title = $"{shortHash} — {filePath}";
+            win._title = $"{shortHash} - {filePath}";
             win._diffText = GitOperations.GetDiff(commitHash, filePath);
             win._scroll = Vector2.zero;
             win.Show();
         }
 
-        /// <summary>Show diff of working-copy file vs HEAD.</summary>
         public static void ShowWorkingDiff(string filePath)
         {
             var win = GetWindow<GitDiffViewerWindow>(true, "Diff Viewer");
             win.minSize = new Vector2(600, 400);
             win._commitHash = "";
             win._filePath = filePath;
-            win._title = $"Working changes — {filePath}";
+            win._title = $"Working changes - {filePath}";
             win._diffText = GitOperations.GetDiffForWorkingCopy(filePath);
             win._scroll = Vector2.zero;
             win.Show();
         }
 
-        // GUI
 
         private void OnGUI()
         {
@@ -62,7 +57,6 @@ namespace GitIntegration
             DrawDiffContent();
         }
 
-        // Toolbar
 
         private void DrawToolbar()
         {
@@ -71,27 +65,22 @@ namespace GitIntegration
             GUILayout.Label(_title, EditorStyles.boldLabel, GUILayout.MaxWidth(position.width * 0.6f));
             GUILayout.FlexibleSpace();
 
-            // Search
-            GUILayout.Label("🔍", GUILayout.Width(18));
+            GUILayout.Label("S", GUILayout.Width(18));
             _searchTerm = EditorGUILayout.TextField(_searchTerm, EditorStyles.toolbarSearchField, GUILayout.Width(140));
 
-            // Word wrap toggle
             _wordWrap = GUILayout.Toggle(_wordWrap, "Wrap", EditorStyles.toolbarButton, GUILayout.Width(42));
 
-            // Font size
             if (GUILayout.Button("A-", EditorStyles.toolbarButton, GUILayout.Width(24)))
                 _fontSize = Mathf.Max(8, _fontSize - 1);
             if (GUILayout.Button("A+", EditorStyles.toolbarButton, GUILayout.Width(24)))
                 _fontSize = Mathf.Min(20, _fontSize + 1);
 
-            // Copy
             if (GUILayout.Button("Copy", EditorStyles.toolbarButton, GUILayout.Width(42)))
                 EditorGUIUtility.systemCopyBuffer = _diffText;
 
             EditorGUILayout.EndHorizontal();
         }
 
-        // Stats bar
 
         private void DrawStats()
         {
@@ -117,7 +106,6 @@ namespace GitIntegration
             GitUIStyles.DrawSeparator(1, 2, 2);
         }
 
-        // Diff content
 
         private void DrawDiffContent()
         {
@@ -138,7 +126,6 @@ namespace GitIntegration
                 lineNum++;
                 string line = rawLine;
 
-                // Search highlight
                 bool matchesSearch = searchLower != null && line.ToLowerInvariant().Contains(searchLower);
 
                 Color bg = Color.clear;
@@ -149,7 +136,6 @@ namespace GitIntegration
                 else if (line.StartsWith("-") && !line.StartsWith("---"))
                     bg = GitUIStyles.DiffRemoveBg;
 
-                // Draw line
                 var content = new GUIContent(line);
                 float height = monoStyle.CalcHeight(content, position.width - 60);
                 var rect = GUILayoutUtility.GetRect(position.width - 40, Mathf.Max(height, 18));
@@ -163,7 +149,6 @@ namespace GitIntegration
                     EditorGUI.DrawRect(rect, highlight);
                 }
 
-                // Line number gutter
                 var gutterRect = new Rect(rect.x, rect.y, 40, rect.height);
                 var gutterStyle = new GUIStyle(GitUIStyles.MutedLabel) { alignment = TextAnchor.MiddleRight, fontSize = (int)_fontSize - 1 };
                 GUI.Label(gutterRect, lineNum.ToString(), gutterStyle);

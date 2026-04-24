@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>Node in the file tree hierarchy.</summary>
     public class FileTreeNode
     {
         public string Name;
@@ -16,7 +15,6 @@ namespace GitIntegration
         public List<FileTreeNode> Children = new List<FileTreeNode>();
     }
 
-    /// <summary>Reusable hierarchical file tree for displaying git changed files.</summary>
     public static class GitFileTreeView
     {
         private const float ROW_H  = 24f;
@@ -25,7 +23,6 @@ namespace GitIntegration
 
         private static readonly HashSet<string> _collapsed = new HashSet<string>();
 
-        // Cached style for folder names
         private static GUIStyle _folderLabel;
         private static GUIStyle FolderLabel
         {
@@ -43,7 +40,6 @@ namespace GitIntegration
             }
         }
 
-        // BUILD TREE
 
         public static FileTreeNode Build(List<GitFileChange> files)
         {
@@ -97,7 +93,6 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>Merge single-child folder chains into combined display names.</summary>
         private static void Compact(FileTreeNode node)
         {
             for (int i = 0; i < node.Children.Count; i++)
@@ -127,11 +122,9 @@ namespace GitIntegration
                 if (node.Children[i].IsFolder) Sort(node.Children[i]);
         }
 
-        // DRAW (layout mode)
 
         public delegate void FileAction(string path, string status);
 
-        /// <summary>Draw the tree in GUILayout mode inside a scroll view.</summary>
         public static void DrawLayout(
             FileTreeNode root, string commitHash,
             FileAction onDiff, FileAction onSecondary, string secondaryLabel,
@@ -155,7 +148,6 @@ namespace GitIntegration
             float indent = depth * INDENT;
             var rowRect = GUILayoutUtility.GetRect(0, ROW_H, GUILayout.ExpandWidth(true));
 
-            // Hover highlight
             bool hover = rowRect.Contains(Event.current.mousePosition);
             if (hover && Event.current.type == EventType.Repaint)
                 EditorGUI.DrawRect(rowRect, GitUIStyles.HoverRowBg);
@@ -168,14 +160,12 @@ namespace GitIntegration
                 DrawFileNode(node, depth, rowRect, x, commitHash, onDiff, onSecondary, secLabel, onPing, onRowClick);
         }
 
-        // Folder row
 
         private static void DrawFolderNode(
             FileTreeNode node, int depth, Rect rowRect, float x,
             string commitHash, FileAction onDiff, FileAction onSecondary,
             string secLabel, FileAction onPing, FileAction onRowClick = null)
         {
-            // Foldout
             bool wasExpanded = node.Expanded;
             node.Expanded = EditorGUI.Foldout(new Rect(x, rowRect.y + 3, 14, 18), node.Expanded, GUIContent.none);
             if (node.Expanded != wasExpanded)
@@ -185,21 +175,17 @@ namespace GitIntegration
             }
             x += 16;
 
-            // Folder icon
             var folderIcon = CachedFolderIcon;
             if (folderIcon != null)
                 GUI.DrawTexture(new Rect(x, rowRect.y + 4, ICON_SZ, ICON_SZ), folderIcon, ScaleMode.ScaleToFit);
             x += ICON_SZ + 4;
 
-            // Name
             GUI.Label(new Rect(x, rowRect.y + 3, rowRect.width - x - 60, 18), node.Name, FolderLabel);
 
-            // Child count
             int fc = CountLeaves(node);
             string countTxt = fc + (fc == 1 ? " file" : " files");
             GUI.Label(new Rect(rowRect.xMax - 56, rowRect.y + 5, 52, 14), countTxt, GitUIStyles.MutedLabel);
 
-            // Subtle separator
             float indent = depth * INDENT;
             EditorGUI.DrawRect(
                 new Rect(rowRect.x + indent, rowRect.yMax - 1, rowRect.width - indent, 1),
@@ -211,13 +197,11 @@ namespace GitIntegration
                     DrawNode(node.Children[i], depth + 1, commitHash, onDiff, onSecondary, secLabel, onPing, onRowClick);
         }
 
-        // Double-click tracking
 
         private static string _lastClickedPath = null;
         private static double _lastClickTime   = -1.0;
         private const  double DBL_CLICK_SECS   = 0.35;
 
-        // File row
 
         private static void DrawFileNode(
             FileTreeNode node, int depth, Rect rowRect, float x,
@@ -226,7 +210,6 @@ namespace GitIntegration
         {
             x += 16; // align past foldout space
 
-            // Status circle icon
             if (!string.IsNullOrEmpty(node.Status))
             {
                 float sz = 15f;
@@ -234,13 +217,11 @@ namespace GitIntegration
                 x += sz + 4;
             }
 
-            // Asset icon
             Texture icon = GetAssetIcon(node.FullPath);
             if (icon != null)
                 GUI.DrawTexture(new Rect(x, rowRect.y + 4, ICON_SZ, ICON_SZ), icon, ScaleMode.ScaleToFit);
             x += ICON_SZ + 4;
 
-            // Calculate button area width
             bool willShowDiff = onDiff != null && !string.IsNullOrEmpty(node.Status) && node.Status != "D";
             bool willShowSec  = onSecondary != null;
             float btnAreaW = (willShowDiff ? 52f : 0f) + (willShowSec ? 66f : 0f);
@@ -249,11 +230,9 @@ namespace GitIntegration
             float nameW = Mathf.Max(rowRect.xMax - x - btnAreaW - 8, 30);
             var nameRect = new Rect(x, rowRect.y + 2, nameW, 20);
 
-            // Clickable area
             var clickRect = new Rect(rowRect.x, rowRect.y, rowRect.width - btnAreaW - 4, rowRect.height);
             EditorGUIUtility.AddCursorRect(nameRect, MouseCursor.Link);
 
-            // Detect click
             if (Event.current.type == EventType.MouseDown
                 && Event.current.button == 0
                 && clickRect.Contains(Event.current.mousePosition))
@@ -280,10 +259,8 @@ namespace GitIntegration
                 Event.current.Use();
             }
 
-            // File name label
             GUI.Label(nameRect, node.Name, EditorStyles.label);
 
-            // Action buttons
             float bx = rowRect.xMax - btnAreaW;
             if (willShowDiff)
             {
@@ -297,7 +274,6 @@ namespace GitIntegration
                     onSecondary(node.FullPath, node.Status);
             }
 
-            // Subtle separator
             float indent = depth * INDENT + 16;
             EditorGUI.DrawRect(
                 new Rect(rowRect.x + indent, rowRect.yMax - 1, rowRect.width - indent, 1),
@@ -305,7 +281,6 @@ namespace GitIntegration
                           GitUIStyles.SeparatorColor.b, 0.18f));
         }
 
-        // ICONS
 
         private static Texture _cachedFolderIcon;
         private static Texture CachedFolderIcon
@@ -323,11 +298,9 @@ namespace GitIntegration
 
         public static Texture GetAssetIcon(string path)
         {
-            // First try Unity's AssetDatabase
             var icon = AssetDatabase.GetCachedIcon(path);
             if (icon != null) return icon;
 
-            // Fallback: extension-based
             string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
             string iconName = ExtToIcon(ext);
             if (iconName != null)
@@ -388,7 +361,6 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>Ping and select an asset in the Project window.</summary>
         public static void PingAsset(string path)
         {
             var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);

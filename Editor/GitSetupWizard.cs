@@ -1,10 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>Git Configuration viewer / editor window.</summary>
     public class GitSetupWizard : EditorWindow
     {
         private GitUserConfig _userConfig;
@@ -18,7 +17,6 @@ namespace GitIntegration
         private bool _lfsInstalled;
         private Vector2 _scroll;
 
-        // Editable fields (only used if user clicks Edit)
         private string _editName = "";
         private string _editEmail = "";
         private string _editRemoteUrl = "";
@@ -55,7 +53,6 @@ namespace GitIntegration
             _editMode = false;
         }
 
-        // GUI
 
         private void OnGUI()
         {
@@ -81,7 +78,6 @@ namespace GitIntegration
             EditorGUILayout.EndScrollView();
         }
 
-        // Git not installed
 
         private void DrawNotInstalled()
         {
@@ -91,7 +87,6 @@ namespace GitIntegration
                 DetectConfig();
         }
 
-        // Not a repo
 
         private void DrawNotARepo()
         {
@@ -118,15 +113,12 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        // Main config view
 
         private void DrawDetectedConfig()
         {
-            // Status header
             EditorGUILayout.HelpBox("Git repository detected.", MessageType.Info);
             GUILayout.Space(8);
 
-            // Repository
             GitUIStyles.BeginCard();
             GUILayout.Label("Repository", GitUIStyles.SubHeader);
             GUILayout.Space(2);
@@ -137,7 +129,6 @@ namespace GitIntegration
 
             GUILayout.Space(6);
 
-            // Identity
             GitUIStyles.BeginCard();
             GUILayout.Label("Identity", GitUIStyles.SubHeader);
             GUILayout.Space(2);
@@ -163,7 +154,6 @@ namespace GitIntegration
 
             GUILayout.Space(6);
 
-            // Remotes
             GitUIStyles.BeginCard();
             GUILayout.Label("Remotes", GitUIStyles.SubHeader);
             GUILayout.Space(2);
@@ -190,7 +180,6 @@ namespace GitIntegration
 
             GUILayout.Space(6);
 
-            // Extras
             GitUIStyles.BeginCard();
             GUILayout.Label("Extras", GitUIStyles.SubHeader);
             GUILayout.Space(2);
@@ -219,7 +208,6 @@ namespace GitIntegration
 
             GUILayout.Space(10);
 
-            // Edit / Save buttons
             EditorGUILayout.BeginHorizontal();
 
             if (!_editMode)
@@ -241,14 +229,13 @@ namespace GitIntegration
                 }
             }
 
-            if (GUILayout.Button("↻ Refresh", GUILayout.Height(28), GUILayout.Width(80)))
+            if (GUILayout.Button("Refresh", GUILayout.Height(28), GUILayout.Width(80)))
                 DetectConfig();
 
             EditorGUILayout.EndHorizontal();
             GUILayout.Space(8);
         }
 
-        // Apply edits
 
         private void ApplyEdits()
         {
@@ -266,7 +253,6 @@ namespace GitIntegration
             DetectConfig();
         }
 
-        // Drawing helpers
 
         private void DrawReadOnlyField(string label, string value)
         {

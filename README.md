@@ -1,74 +1,55 @@
 # Unity Git Integration
 
-A Unity Editor tool that brings Git source control into the editor with a visual commit graph, branch management, asset history, and diff viewing — all without leaving Unity.
+## What This Tool Does
+Unity Git Integration brings core Git workflows into the Unity editor: commit history graph, working tree changes, per-asset history, inline diffs, and repository configuration.
 
----
+## Why It Helps
+- Lets artists and designers inspect Git state without leaving Unity.
+- Speeds up code and asset review with in-editor diffs.
+- Reduces context switching between Unity and external Git tools.
 
 ## Features
-
-- Visual commit graph with colored branch lanes (Fork-style layout)
-- Browse and switch between local and remote branches
-- View changed files per commit with an inline diff viewer
-- Working tree panel showing staged and unstaged changes
-- Per-asset Git history — right-click any asset to view its full commit log
-- Working diff viewer for any modified asset
-- Configuration panel for user name, email, and remote URLs
-- Keyboard shortcuts: `Ctrl+H` (asset history), `Ctrl+D` (working diff), `Ctrl+Alt+G` (open window)
-
----
-
-## Requirements
-
-- Unity 6000.1 or later
-- Git must be installed and available on the system PATH
-
----
+- Main Git window with history, working tree, and configuration views.
+- Commit graph rendering with branch lanes and merge connections.
+- Commit detail panel with changed files and inline diff.
+- Asset context menu actions:
+	- `Assets/Git/View History` (Ctrl + H)
+	- `Assets/Git/View Working Diff` (Ctrl + D)
+- Main window shortcut: `Tools/Git Integration` (Ctrl + Alt + G).
+- Setup/config tools for user identity, remotes, `.gitignore`, and LFS.
 
 ## Installation
+### Option A: Add from Git URL
+1. Open Unity Package Manager.
+2. Click + then Add package from git URL.
+3. Paste this package repository URL.
 
-### Option A — Unity Package Manager (recommended)
+### Option B: Local package folder
+1. Copy `unity-git-integration` into your project's `Packages` folder.
+2. Reopen Unity or wait for package refresh.
 
-1. Open **Window → Package Manager**
-2. Click the **+** button → **Add package from git URL...**
-3. Enter the repository URL and click **Add**
+## How To Use
+1. Open `Tools/Git Integration`.
+2. Use History view to browse commits and select one for details.
+3. Open Working Tree view to inspect current modified files.
+4. Select a changed file to see inline diff.
+5. Open Config to edit Git name/email and remote URL.
 
-### Option B — Manual
+Asset-level workflow:
+1. Right-click an asset in Project window.
+2. Choose `Git/View History` for commit history of that file.
+3. Choose `Git/View Working Diff` for current unstaged/staged diff.
 
-1. Download or clone this repository
-2. Copy the `unity-git-integration` folder into your project's `Packages/` directory
-3. Unity will automatically detect and import the package
+## Example Workflow
+1. Make scene or prefab changes.
+2. Open Working Tree to inspect changed files.
+3. Check exact line changes in inline diff.
+4. Switch to History and compare with recent commits.
+5. Use Config view to fix missing Git identity if needed.
 
----
+## Notes
+- Requires Git installed and available in PATH.
+- Git commands run from your project repository root.
 
-## How It Works
-
-### Opening the Window
-
-Go to **Tools → Git Integration** (or press `Ctrl+Alt+G`) to open the main Git window.
-
-The window has three sections:
-
-- **Sidebar** — lists local branches, remote branches, and workspace views
-- **Commit graph** — shows the full branch history with colored lane lines; click any commit to see its details and changed files
-- **Detail panel** — shows commit metadata, changed files, and an inline diff for any selected file
-
-Switch between **History** and **Working Tree** in the sidebar to toggle between the commit log and your current uncommitted changes.
-
-### Asset History & Diff
-
-Right-click any asset in the Project window to access:
-
-| Menu Item | Shortcut | Action |
-|---|---|---|
-| **Git → View History** | `Ctrl+H` | Opens the full commit history for that file |
-| **Git → View Working Diff** | `Ctrl+D` | Shows the current uncommitted diff for that file |
-
-### Configuration
-
-Open the configuration panel from within the Git window to view or edit your Git user name, email, and remote URLs.
-
----
-
-## Author
-
-Made by [mhze](mailto:mhze.uk@gmail.com)
+## License
+See `LICENSE.md` in this package.

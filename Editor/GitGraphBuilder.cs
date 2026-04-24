@@ -1,36 +1,28 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace GitIntegration
 {
-    // Data yielded per commit row
 
     public class GraphRow
     {
         public GitCommitInfo Commit;
 
-        /// <summary>Which column the commit dot sits on.</summary>
         public int Lane;
 
-        /// <summary>Max lane index in this row (for sizing).</summary>
         public int MaxLane;
 
-        /// <summary>Colour of the commit dot.</summary>
         public Color DotColor;
 
-        /// <summary>Lanes passing through without touching the commit.</summary>
         public List<(int lane, Color color)> Passthrough = new List<(int, Color)>();
 
-        /// <summary>Edges converging into the commit from above.</summary>
         public List<(int fromLane, Color color)> Converging = new List<(int, Color)>();
 
-        /// <summary>Edges diverging from the commit downward.</summary>
         public List<(int toLane, Color color)> Diverging = new List<(int, Color)>();
     }
 
-    // Graph builder – assigns lanes and builds drawing data
 
     public static class GitGraphBuilder
     {
@@ -49,7 +41,6 @@ namespace GitIntegration
         private static int _nextColor;
         private static Color PickColor() => PALETTE[(_nextColor++) % PALETTE.Length];
 
-        // Internal lane slot
 
         private struct LaneSlot
         {
@@ -68,7 +59,6 @@ namespace GitIntegration
             {
                 var parents = commit.Parents ?? new List<string>();
 
-                // 1. Find or create this commit's lane
 
                 int myLane   = FindLane(lanes, commit.Hash);
                 bool wasNew  = myLane < 0;
@@ -82,14 +72,12 @@ namespace GitIntegration
 
                 Color myColor = wasNew ? PickColor() : lanes[myLane].LaneColor;
 
-                // 2. Snapshot before-state
 
                 EnsureCapacity(lanes, myLane);
                 if (wasNew) lanes[myLane] = new LaneSlot { TargetHash = commit.Hash, LaneColor = myColor };
 
                 var before = lanes.ToArray();
 
-                // 3. Extra converging lanes
 
                 var extraConverge = new List<int>();
                 for (int i = 0; i < before.Length; i++)
@@ -98,11 +86,9 @@ namespace GitIntegration
                         extraConverge.Add(i);
                 }
 
-                // Free those lanes
                 foreach (int ec in extraConverge)
                     lanes[ec] = default;
 
-                // 4. Update myLane for parent[0]
 
                 int diverge0Lane = -1;
 
@@ -115,7 +101,6 @@ namespace GitIntegration
                     int fp0 = FindLane(lanes, parents[0]);
                     if (fp0 >= 0 && fp0 != myLane)
                     {
-                        // Parent[0] already tracked by another lane - merge
                         lanes[myLane] = default;
                         diverge0Lane  = fp0;
                     }
@@ -126,7 +111,6 @@ namespace GitIntegration
                     }
                 }
 
-                // 5. Add new lanes for extra parents
 
                 var extraDiverge = new List<(int toLane, Color color)>();
                 for (int pi = 1; pi < parents.Count; pi++)
@@ -142,11 +126,9 @@ namespace GitIntegration
                     extraDiverge.Add((slot, ec));
                 }
 
-                // 6. Build row
 
                 var row = new GraphRow { Commit = commit, Lane = myLane, DotColor = myColor };
 
-                // Passthrough: active both before and after, not the commit lane
                 for (int i = 0; i < before.Length; i++)
                 {
                     if (i == myLane) continue;
@@ -156,19 +138,16 @@ namespace GitIntegration
                         row.Passthrough.Add((i, before[i].LaneColor));
                 }
 
-                // Converging (top-half)
                 if (!wasNew)
                     row.Converging.Add((myLane, myColor));
                 foreach (int ec in extraConverge)
                     row.Converging.Add((ec, before[ec].LaneColor));
 
-                // Diverging (bottom-half)
                 if (diverge0Lane >= 0)
                     row.Diverging.Add((diverge0Lane, myColor));
                 foreach (var (tl, tc) in extraDiverge)
                     row.Diverging.Add((tl, tc));
 
-                // MaxLane
                 int maxIdx = myLane;
                 foreach (var (l, _) in row.Passthrough) maxIdx = Math.Max(maxIdx, l);
                 foreach (var (fl, _) in row.Converging)  maxIdx = Math.Max(maxIdx, fl);
@@ -177,7 +156,6 @@ namespace GitIntegration
 
                 result.Add(row);
 
-                // 7. Trim trailing free lanes
 
                 while (lanes.Count > 0 && !lanes[lanes.Count - 1].Active)
                     lanes.RemoveAt(lanes.Count - 1);
@@ -186,7 +164,6 @@ namespace GitIntegration
             return result;
         }
 
-        // Helpers
 
         private static int FindLane(List<LaneSlot> lanes, string hash)
         {

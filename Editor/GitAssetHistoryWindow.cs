@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace GitIntegration
 {
-    /// <summary>Shows full Git history for a single asset with commit list, metadata, and inline diff.</summary>
     public class GitAssetHistoryWindow : EditorWindow
     {
         private string _assetPath;
@@ -18,20 +17,17 @@ namespace GitIntegration
         private Vector2 _listScroll;
         private Vector2 _diffScroll;
 
-        // Resizable splitters
         private float _listW        = 0f;   // initialised on first draw
         private float _detailSplitH = 90f;  // height of the slim meta strip
         private bool  _draggingListW       = false;
         private bool  _draggingDetailSplit = false;
 
-        // Cached styles
         private GUIStyle _msgStyle;
         private GUIStyle _metaStyle;
         private GUIStyle _hashChipStyle;
         private GUIStyle _monoStyle;
         private GUIStyle _gutterStyle;
 
-        // --- Entry point ---
 
         public static void ShowForAsset(string assetPath)
         {
@@ -53,7 +49,6 @@ namespace GitIntegration
             _diffText    = "";
         }
 
-        // --- Styles ---
 
         private void EnsureStyles()
         {
@@ -88,7 +83,6 @@ namespace GitIntegration
             };
         }
 
-        // --- OnGUI ---
 
         private void OnGUI()
         {
@@ -116,7 +110,6 @@ namespace GitIntegration
             DrawRightPanel(rightRect);
         }
 
-        // --- Toolbar ---
 
         private void DrawToolbar()
         {
@@ -162,7 +155,6 @@ namespace GitIntegration
             EditorGUILayout.EndHorizontal();
         }
 
-        // --- Commit list (left pane) ---
 
         private void DrawCommitList(Rect area)
         {
@@ -208,13 +200,11 @@ namespace GitIntegration
                 GUI.Label(new Rect(textX, rect.y + 5, textW, 18),
                     Truncate(commit.Message, 60), _msgStyle);
 
-                // Relative date + short hash stacked top-right
                 GUI.Label(new Rect(area.width - 66, rect.y + 5, 62, 16),
                     commit.RelativeDate, _hashChipStyle);
                 GUI.Label(new Rect(area.width - 66, rect.y + 22, 62, 14),
                     commit.ShortHash, _hashChipStyle);
 
-                // First ref pill (branch / tag)
                 if (commit.Refs != null && commit.Refs.Count > 0)
                 {
                     string firstRef = commit.Refs[0];
@@ -245,7 +235,6 @@ namespace GitIntegration
             GUI.EndGroup();
         }
 
-        // --- Right panel ---
 
         private void DrawRightPanel(Rect area)
         {
@@ -270,7 +259,6 @@ namespace GitIntegration
             DrawDiffArea(diffRect, c);
         }
 
-        // --- Metadata strip ---
 
         private void DrawMetaStrip(Rect area, GitCommitInfo c)
         {
@@ -284,15 +272,12 @@ namespace GitIntegration
             const float dateW = 150f;  // right-anchored date (left of hash)
             const float gap  = 6f;
 
-            // Row 1: avatar | author+email ... date | hash
 
             float row1Y = 8f;
             float row1H = 18f;
 
-            // Author avatar (left)
             GitUIStyles.DrawAuthorCircle(new Rect(pad, row1Y, avatW, avatW), c.Author, c.AuthorEmail);
 
-            // Hash chip (far right)
             float hashX  = w - pad - hashW;
             var hashRect = new Rect(hashX, row1Y + 1, hashW, row1H - 2);
             EditorGUI.DrawRect(hashRect, GitUIStyles.CardBg);
@@ -303,11 +288,9 @@ namespace GitIntegration
             }
             EditorGUIUtility.AddCursorRect(hashRect, MouseCursor.Text);
 
-            // Date (left of hash chip)
             float dateX  = hashX - gap - dateW;
             GUI.Label(new Rect(dateX, row1Y, dateW, row1H), c.Date, _metaStyle);
 
-            // Author + email
             float authorX = pad + avatW + gap;
             float authorW = Mathf.Max(dateX - gap - authorX, 60f);
             string authorLabel = authorW > 160f
@@ -315,13 +298,11 @@ namespace GitIntegration
                 : c.Author;
             GUI.Label(new Rect(authorX, row1Y, authorW, row1H), authorLabel, EditorStyles.boldLabel);
 
-            // Row 2: commit message
 
             float msgY = row1Y + Mathf.Max(row1H, avatW) + 2f;
             GUI.Label(new Rect(authorX, msgY, w - authorX - pad, 15f),
                 Truncate(c.Message, 140), _metaStyle);
 
-            // Row 3: action buttons
 
             float btnY = msgY + 18f;
             const float btnH = 20f;
@@ -346,19 +327,16 @@ namespace GitIntegration
                 }
             }
 
-            // Bottom border
             EditorGUI.DrawRect(new Rect(0, area.height - 1, w, 1), GitUIStyles.SeparatorColor);
 
             GUI.EndGroup();
         }
 
-        // --- Diff area ---
 
         private void DrawDiffArea(Rect area, GitCommitInfo c)
         {
             if (area.height < 10f) return;
 
-            // Header bar
             var hdr = new Rect(area.x, area.y, area.width, 22f);
             EditorGUI.DrawRect(hdr, GitUIStyles.HeaderBg);
 
@@ -366,7 +344,6 @@ namespace GitIntegration
             GUI.Label(new Rect(hdr.x + 8, hdr.y + 3, hdr.width - 160, 16),
                 fname, GitUIStyles.SectionLabel);
 
-            // +adds / -removes stat
             if (!string.IsNullOrEmpty(_diffText))
             {
                 int adds    = _diffText.Split('\n').Count(l => l.StartsWith("+") && !l.StartsWith("+++"));
@@ -427,7 +404,6 @@ namespace GitIntegration
             GUI.EndScrollView();
         }
 
-        // --- Helpers ---
 
         private List<GitCommitInfo> FilteredCommits()
         {
@@ -446,7 +422,6 @@ namespace GitIntegration
             return s.Length <= max ? s : s.Substring(0, max - 1) + "...";
         }
 
-        // --- Splitters ---
 
         private void DrawVerticalSplitter(Rect r, ref bool dragging, ref float value, float min, float max)
         {

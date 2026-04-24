@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,7 +10,6 @@ using Debug = UnityEngine.Debug;
 
 namespace GitIntegration
 {
-    // Data models
 
     [Serializable]
     public class GitCommitInfo
@@ -71,11 +70,9 @@ namespace GitIntegration
         public string PushUrl;
     }
 
-    // Git CLI wrapper
 
     public static class GitOperations
     {
-        // Cached repo root – resolved once
         private static string _repoRoot;
         private static bool _repoRootResolved;
 
@@ -92,7 +89,6 @@ namespace GitIntegration
             }
         }
 
-        /// <summary>Resolves repo root without going through RunGit (avoids circular dependency).</summary>
         private static string ResolveRepoRoot()
         {
             try
@@ -126,14 +122,12 @@ namespace GitIntegration
             return null;
         }
 
-        /// <summary>Force re-detection of the repo root (e.g. after git init).</summary>
         public static void InvalidateRepoRoot()
         {
             _repoRoot = null;
             _repoRootResolved = false;
         }
 
-        // Low-level
 
         public static (string output, string error, int exitCode) RunGit(string arguments, int timeoutMs = 30000)
         {
@@ -183,7 +177,6 @@ namespace GitIntegration
             }
         }
 
-        // Repository detection
 
         public static bool IsGitInstalled()
         {
@@ -203,7 +196,6 @@ namespace GitIntegration
             return code == 0 && output.Trim() == "true";
         }
 
-        // Init / Clone
 
         public static bool InitRepo()
         {
@@ -231,7 +223,6 @@ namespace GitIntegration
             return code == 0;
         }
 
-        // User config
 
         public static GitUserConfig GetUserConfig()
         {
@@ -249,7 +240,6 @@ namespace GitIntegration
             return c1 == 0 && c2 == 0;
         }
 
-        // Remotes
 
         public static List<GitRemoteInfo> GetRemotes()
         {
@@ -285,7 +275,6 @@ namespace GitIntegration
             return list;
         }
 
-        // Fetch
 
         public static bool Fetch()
         {
@@ -294,7 +283,6 @@ namespace GitIntegration
             return code == 0;
         }
 
-        // Branches
 
         public static string GetCurrentBranch()
         {
@@ -302,7 +290,6 @@ namespace GitIntegration
             if (code == 0 && !string.IsNullOrEmpty(output.Trim()))
                 return output.Trim();
 
-            // detached HEAD fallback
             var (o2, _, c2) = RunGit("rev-parse --short HEAD");
             return c2 == 0 ? $"(detached {o2.Trim()})" : "(unknown)";
         }
@@ -333,7 +320,6 @@ namespace GitIntegration
                 list.Add(b);
             }
 
-            // Get ahead/behind for current branch
             var current = list.Find(b => b.IsCurrent);
             if (current != null && !string.IsNullOrEmpty(current.TrackingBranch))
             {
@@ -352,7 +338,6 @@ namespace GitIntegration
             return list;
         }
 
-        // Status
 
         public static List<GitStatusEntry> GetStatus()
         {
@@ -375,7 +360,6 @@ namespace GitIntegration
             return GetStatus().Count;
         }
 
-        // Commit log
 
         private const string LOG_FORMAT = "%H|%h|%an|%ae|%ai|%ar|%s";
         private const char LOG_SEPARATOR = '|';
@@ -407,10 +391,8 @@ namespace GitIntegration
             return list;
         }
 
-        /// <summary>Returns all commits across all branches with parent hashes and ref labels.</summary>
         public static List<GitCommitInfo> GetLogAll(int count = 300)
         {
-            // Use unit-separator (\x1F) as field delimiter to avoid conflicts with any content
             string args = $"log --all --topo-order -n {count} --pretty=format:\"%H%x1F%h%x1F%P%x1F%an%x1F%ae%x1F%ai%x1F%ar%x1F%s%x1F%D\"";
             var (output, _, code) = RunGit(args);
             var list = new List<GitCommitInfo>();
@@ -473,7 +455,6 @@ namespace GitIntegration
             return list;
         }
 
-        // Diff
 
         public static string GetDiff(string commitHash, string filePath = null)
         {
@@ -502,9 +483,7 @@ namespace GitIntegration
             return code == 0 ? output : null;
         }
 
-        // Restore (local only)
 
-        /// <summary>Restores a file to the state at a given commit (local only).</summary>
         public static bool RestoreFileFromCommit(string commitHash, string filePath)
         {
             string relPath = NormalizeToRepoRelative(filePath);
@@ -514,12 +493,10 @@ namespace GitIntegration
                 Debug.LogError($"[Git] restore failed: {error}");
                 return false;
             }
-            // Un-stage so it appears as a working-tree modification
             RunGit($"reset HEAD -- \"{relPath}\"");
             return true;
         }
 
-        /// <summary>Discards local changes for a file (reverts to HEAD).</summary>
         public static bool DiscardLocalChanges(string filePath)
         {
             string relPath = NormalizeToRepoRelative(filePath);
@@ -532,7 +509,6 @@ namespace GitIntegration
             return true;
         }
 
-        // Gitignore
 
         public static bool HasGitIgnore()
         {
@@ -611,7 +587,6 @@ plastic.selector
             return true;
         }
 
-        // LFS
 
         public static bool IsLfsInstalled()
         {
@@ -626,7 +601,6 @@ plastic.selector
             return code == 0;
         }
 
-        // Helpers
 
         public static string NormalizeToRepoRelative(string fullPath)
         {
